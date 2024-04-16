@@ -1,0 +1,13 @@
+{
+    "name": "msp-contracts",
+    "version": "0.1.0",
+    "license": "MIT",
+    "scripts": {
+        "compile": "forge test",
+        "format": "forge fmt",
+        "lint": "solhint -w 0 'contracts/**/*.sol'"
+    },
+    "devDependencies": {
+        "solhint": "^4.5.4"
+    }
+}
