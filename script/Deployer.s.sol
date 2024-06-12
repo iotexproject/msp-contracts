@@ -8,7 +8,6 @@ contract Deployer is Script {
     function run() external {
         vm.startBroadcast();
         BucketStrategy strategy = new BucketStrategy();
-        strategy.initialize(address(1));
         vm.stopBroadcast();
     }
 }

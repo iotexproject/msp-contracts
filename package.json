@@ -5,9 +5,9 @@
     "scripts": {
         "compile": "forge test",
         "format": "forge fmt",
-        "lint": "solhint -w 0 'contracts/**/*.sol'"
+        "lint": "solhint -w 0 'src/**/*.sol'"
     },
     "devDependencies": {
-        "solhint": "^4.5.4"
+        "solhint": "^5.0.1"
     }
 }
