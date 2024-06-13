@@ -11,19 +11,14 @@ contract BucketStrategy is IBucketStrategy, Initializable, ERC721Holder {
     function underlyingToken() external view override returns (address) {}
 
     /// @inheritdoc IStrategy
-    function shares(address user) external view override returns (uint256) {}
+    function amount(address user) external view override returns (uint256) {}
 
     /// @inheritdoc IStrategy
-    function shares(
-        address user,
-        uint256 timepoint
-    ) external view override returns (uint256) {}
+    function amount(address user, uint256 timepoint) external view override returns (uint256) {}
 
     /// @inheritdoc IStrategy
-    function totalShares() external view override returns (uint256) {}
+    function totalAmount() external view override returns (uint256) {}
 
     /// @inheritdoc IStrategy
-    function totalShares(
-        uint256 timepoint
-    ) external view override returns (uint256) {}
+    function totalAmount(uint256 timepoint) external view override returns (uint256) {}
 }

@@ -2,26 +2,26 @@
 pragma solidity ^0.8.19;
 
 interface IStrategy {
-    /// @notice The underlying token for shares in this Strategy
+    /// @notice The underlying token for staking in this Strategy
     function underlyingToken() external view returns (address);
-    
-    /**
-     * @notice convenience function for fetching the total shares of `user`
-     */
-    function shares(address user) external view returns (uint256);
 
     /**
-     * @notice convenience function for fetching the total shares of `user` at a specific moment in the past.
+     * @notice convenience function for fetching the total amount of `user`
      */
-    function shares(address user, uint256 timepoint) external view returns (uint256);
+    function amount(address user) external view returns (uint256);
 
     /**
-     * @notice The total number of extant shares 
-     */ 
-    function totalShares() external view returns (uint256);
+     * @notice convenience function for fetching the total amount of `user` at a specific moment in the past.
+     */
+    function amount(address user, uint256 timepoint) external view returns (uint256);
 
     /**
-     * @notice The total number of extant shares at a specific moment in the past.
+     * @notice The total number of extant amount
      */
-    function totalShares(uint256 timepoint) external view returns (uint256);
+    function totalAmount() external view returns (uint256);
+
+    /**
+     * @notice The total number of extant amount at a specific moment in the past.
+     */
+    function totalAmount(uint256 timepoint) external view returns (uint256);
 }

@@ -3,5 +3,4 @@ pragma solidity ^0.8.19;
 
 import "./IStrategy.sol";
 
-interface IBucketStrategy is IStrategy {
-}
+interface IBucketStrategy is IStrategy {}
