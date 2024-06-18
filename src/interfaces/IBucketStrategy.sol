@@ -24,6 +24,8 @@ interface IBucketStrategy is IStrategy {
 
     function unstakeTime(uint256 bucketId) external view returns (uint256);
 
+    function stakerBuckets(address staker) external view returns (uint256[] memory);
+
     function calculateBucketRestakeAmount(uint256 bucketDuration, uint256 bucketAmount)
         external
         view

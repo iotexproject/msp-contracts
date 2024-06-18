@@ -13,7 +13,7 @@ interface IStrategy {
     /**
      * @notice convenience function for fetching the total amount of `user` at a specific moment in the past.
      */
-    function amount(address user, uint256 timepoint) external view returns (uint256);
+    function amount(address user, uint48 timepoint) external view returns (uint256);
 
     /**
      * @notice The total number of extant amount
@@ -23,5 +23,5 @@ interface IStrategy {
     /**
      * @notice The total number of extant amount at a specific moment in the past.
      */
-    function totalAmount(uint256 timepoint) external view returns (uint256);
+    function totalAmount(uint48 timepoint) external view returns (uint256);
 }

@@ -8,9 +8,9 @@ contract LSTStrategy is IStrategy {
 
     function amount(address user) external view override returns (uint256) {}
 
-    function amount(address user, uint256 timepoint) external view override returns (uint256) {}
+    function amount(address user, uint48 timepoint) external view override returns (uint256) {}
 
     function totalAmount() external view override returns (uint256) {}
 
-    function totalAmount(uint256 timepoint) external view override returns (uint256) {}
+    function totalAmount(uint48 timepoint) external view override returns (uint256) {}
 }
