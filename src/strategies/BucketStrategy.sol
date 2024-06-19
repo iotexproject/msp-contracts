@@ -17,7 +17,6 @@ contract BucketStrategy is IBucketStrategy, Initializable, ERC721Holder {
     uint48 constant WEEK = 7 days;
     uint256 public constant UINT256_MAX = type(uint256).max;
     uint256 public constant MAX_BUCKET_LIST_LENGTH = 32;
-    uint256 public constant WITHDRAW_PERIOD = 7 days;
 
     mapping(uint256 => uint8) public override stakeStatus;
     mapping(uint256 => address) public override bucketStaker;
@@ -105,7 +104,7 @@ contract BucketStrategy is IBucketStrategy, Initializable, ERC721Holder {
     function withdraw(uint256 bucketId, address recipient) external {
         require(stakeStatus[bucketId] == 2, "not unstake bucket");
         require(bucketStaker[bucketId] == msg.sender, "not staker");
-        require(unstakeTime[bucketId] + WITHDRAW_PERIOD <= block.timestamp, "withdraw freeze");
+        require(unstakeTime[bucketId] + WEEK <= block.timestamp, "withdraw freeze");
 
         stakeStatus[bucketId] = 0;
         bucketStaker[bucketId] = address(0);
