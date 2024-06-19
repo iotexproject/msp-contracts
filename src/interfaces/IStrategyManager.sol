@@ -25,19 +25,9 @@ interface IStrategyManager {
     function shares(address user) external view returns (uint256);
 
     /**
-     * @notice convenience function for fetching the total shares of `user` at a specific moment in the past.
-     */
-    function shares(address user, uint256 timepoint) external view returns (uint256);
-
-    /**
      * @notice convenience function for fetching the total shares of `user`
      */
     function shares(address user, address strategy) external view returns (uint256);
-
-    /**
-     * @notice convenience function for fetching the total shares of `user` at a specific moment in the past.
-     */
-    function shares(address user, address strategy, uint256 timepoint) external view returns (uint256);
 
     /**
      * @notice The total number of extant shares
@@ -45,17 +35,7 @@ interface IStrategyManager {
     function totalShares() external view returns (uint256);
 
     /**
-     * @notice The total number of extant shares at a specific moment in the past.
-     */
-    function totalShares(uint256 timepoint) external view returns (uint256);
-
-    /**
      * @notice The total number of extant shares
      */
     function totalShares(address strategy) external view returns (uint256);
-
-    /**
-     * @notice The total number of extant shares at a specific moment in the past.
-     */
-    function totalShares(address strategy, uint256 timepoint) external view returns (uint256);
 }

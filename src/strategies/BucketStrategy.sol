@@ -4,32 +4,41 @@ pragma solidity ^0.8.19;
 import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 import "../interfaces/IBucket.sol";
 import "../interfaces/IBucketStrategy.sol";
-import "../utils/Checkpoints.sol";
 
 contract BucketStrategy is IBucketStrategy, Initializable, ERC721Holder {
     using EnumerableSet for EnumerableSet.UintSet;
-    using Checkpoints for Checkpoints.Trace208;
 
-    uint48 constant WEEK = 7 days;
+    uint256 constant WEEK = 7 days;
     uint256 public constant UINT256_MAX = type(uint256).max;
-    uint256 public constant MAX_BUCKET_LIST_LENGTH = 32;
 
+    /// @inheritdoc IStrategy
+    address public override underlyingToken;
+
+    /// @inheritdoc IStrategy
+    uint256 public override totalAmount;
+
+    /// @inheritdoc IStrategy
+    mapping(address => uint256) public override amount;
+
+    // @inheritdoc IBucletStrategy
     mapping(uint256 => uint8) public override stakeStatus;
-    mapping(uint256 => address) public override bucketStaker;
-    mapping(uint256 => uint256) public override unstakeTime;
 
-    Checkpoints.Trace208 _totalAmount;
-    mapping(uint256 => Checkpoints.Trace208) _bucketAmount;
-    mapping(address => EnumerableSet.UintSet) _stakerBucketList;
+    // @inheritdoc IBucletStrategy
+    mapping(uint256 => address) public override bucketStaker;
+
+    // @inheritdoc IBucletStrategy
+    mapping(uint256 => uint256) public override bucketAmount;
+
+    // @inheritdoc IBucletStrategy
+    mapping(uint256 => uint256) public override unstakeTime;
 
     /// @inheritdoc IBucketStrategy
     address public override rewardPool;
-    /// @inheritdoc IStrategy
-    address public override underlyingToken;
+
+    mapping(address => EnumerableSet.UintSet) _stakerBucketList;
 
     function initialize(address bucketNFT, address bucketRewardPool) public initializer {
         underlyingToken = bucketNFT;
@@ -38,9 +47,6 @@ contract BucketStrategy is IBucketStrategy, Initializable, ERC721Holder {
 
     /// @inheritdoc IBucketStrategy
     function stake(uint256 bucketId) external override {
-        EnumerableSet.UintSet storage _stakerBuckets = _stakerBucketList[msg.sender];
-        require(_stakerBuckets.length() < MAX_BUCKET_LIST_LENGTH, "exceed max bucket size");
-
         IBucket bucketContract = IBucket(underlyingToken);
         require(bucketContract.ownerOf(bucketId) == msg.sender, "not owner");
 
@@ -51,13 +57,12 @@ contract BucketStrategy is IBucketStrategy, Initializable, ERC721Holder {
 
         stakeStatus[bucketId] = 1;
         bucketStaker[bucketId] = msg.sender;
-        uint48 current = (SafeCast.toUint48(block.timestamp) / WEEK) * WEEK;
-        uint208 stakingAmount = SafeCast.toUint208(calculateBucketRestakeAmount(bucket.duration, bucket.amount));
-        _bucketAmount[bucketId].push(current, SafeCast.toUint208(stakingAmount));
+        uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, bucket.amount);
+        bucketAmount[bucketId] = bucket.amount;
+        amount[msg.sender] += stakingAmount;
         _stakerBucketList[msg.sender].add(bucketId);
 
-        uint208 _oldTotal = _totalAmount.latest();
-        _totalAmount.push(current, _oldTotal + stakingAmount);
+        totalAmount += stakingAmount;
 
         emit Stake(msg.sender, bucketId, bucket.amount, stakingAmount);
     }
@@ -71,13 +76,11 @@ contract BucketStrategy is IBucketStrategy, Initializable, ERC721Holder {
         bucketContract.deposit{value: msg.value}(bucketId);
 
         Bucket memory bucket = bucketContract.bucketOf(bucketId);
-        uint48 current = (SafeCast.toUint48(block.timestamp) / WEEK) * WEEK;
-        uint208 stakingAmount = SafeCast.toUint208(calculateBucketRestakeAmount(bucket.duration, bucket.amount));
-        uint208 oldStakingAmount = _bucketAmount[bucketId].latest();
-        _bucketAmount[bucketId].push(current, stakingAmount);
+        uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, msg.value);
+        bucketAmount[bucketId] = bucket.amount;
+        amount[msg.sender] += stakingAmount;
 
-        uint208 _oldTotal = _totalAmount.latest();
-        _totalAmount.push(current, _oldTotal + stakingAmount - oldStakingAmount);
+        totalAmount += stakingAmount;
 
         emit Deposit(msg.sender, bucketId, msg.value, stakingAmount);
     }
@@ -88,14 +91,14 @@ contract BucketStrategy is IBucketStrategy, Initializable, ERC721Holder {
         require(bucketStaker[bucketId] == msg.sender, "not staker");
 
         stakeStatus[bucketId] = 2;
-        uint208 oldStakingAmount = _bucketAmount[bucketId].latest();
-        uint48 current = (SafeCast.toUint48(block.timestamp) / WEEK) * WEEK;
-        _bucketAmount[bucketId].push(current, 0);
+        Bucket memory bucket = IBucket(underlyingToken).bucketOf(bucketId);
+        uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, bucketAmount[bucketId]);
+
+        amount[msg.sender] -= stakingAmount;
         _stakerBucketList[msg.sender].remove(bucketId);
         unstakeTime[bucketId] = block.timestamp;
 
-        uint208 _oldTotal = _totalAmount.latest();
-        _totalAmount.push(current, _oldTotal - oldStakingAmount);
+        totalAmount -= stakingAmount;
 
         emit Unstake(msg.sender, bucketId);
     }
@@ -109,6 +112,7 @@ contract BucketStrategy is IBucketStrategy, Initializable, ERC721Holder {
         stakeStatus[bucketId] = 0;
         bucketStaker[bucketId] = address(0);
         unstakeTime[bucketId] = 0;
+        bucketAmount[bucketId] = 0;
 
         IBucket(underlyingToken).transferFrom(address(this), recipient, bucketId);
 
@@ -118,47 +122,18 @@ contract BucketStrategy is IBucketStrategy, Initializable, ERC721Holder {
     /// @inheritdoc IBucketStrategy
     function poke(uint256 bucketId) external override {
         require(stakeStatus[bucketId] == 1, "not staking bucket");
-
         Bucket memory bucket = IBucket(underlyingToken).bucketOf(bucketId);
-        uint208 stakingAmount = SafeCast.toUint208(calculateBucketRestakeAmount(bucket.duration, bucket.amount));
-        uint48 current = (SafeCast.toUint48(block.timestamp) / WEEK) * WEEK;
-        uint208 oldStakingAmount = _bucketAmount[bucketId].latest();
-        _bucketAmount[bucketId].push(current, stakingAmount);
+        uint256 oldStakingAmount = bucketAmount[bucketId];
+        require(bucket.amount > oldStakingAmount, "invalid bucket amount");
 
-        uint208 _oldTotal = _totalAmount.latest();
-        _totalAmount.push(current, _oldTotal + stakingAmount - oldStakingAmount);
+        uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, bucket.amount - oldStakingAmount);
+
+        amount[msg.sender] += stakingAmount;
+        bucketAmount[bucketId] = bucket.amount;
+
+        totalAmount += stakingAmount;
 
         emit Poke(msg.sender, bucketId, bucket.amount, stakingAmount);
-    }
-
-    /// @inheritdoc IStrategy
-    function amount(address staker) external view override returns (uint256) {
-        uint208 total = 0;
-        uint256[] memory buckets = _stakerBucketList[staker].values();
-        for (uint256 i = 0; i < buckets.length; i++) {
-            total += _bucketAmount[buckets[i]].latest();
-        }
-        return total;
-    }
-
-    /// @inheritdoc IStrategy
-    function amount(address staker, uint48 timepoint) external view override returns (uint256) {
-        uint208 total = 0;
-        uint256[] memory buckets = _stakerBucketList[staker].values();
-        for (uint256 i = 0; i < buckets.length; i++) {
-            total += _bucketAmount[buckets[i]].upperLookup(timepoint);
-        }
-        return total;
-    }
-
-    /// @inheritdoc IStrategy
-    function totalAmount() external view override returns (uint256) {
-        return _totalAmount.latest();
-    }
-
-    /// @inheritdoc IStrategy
-    function totalAmount(uint48 timepoint) external view override returns (uint256) {
-        return _totalAmount.upperLookup(timepoint);
     }
 
     /// @inheritdoc IBucketStrategy

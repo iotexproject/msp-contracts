@@ -18,17 +18,9 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
 
     function shares(address user) external view override returns (uint256) {}
 
-    function shares(address user, uint256 timepoint) external view override returns (uint256) {}
-
     function shares(address user, address strategy) external view override returns (uint256) {}
-
-    function shares(address user, address strategy, uint256 timepoint) external view override returns (uint256) {}
 
     function totalShares() external view override returns (uint256) {}
 
-    function totalShares(uint256 timepoint) external view override returns (uint256) {}
-
     function totalShares(address strategy) external view override returns (uint256) {}
-
-    function totalShares(address strategy, uint256 timepoint) external view override returns (uint256) {}
 }
