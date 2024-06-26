@@ -128,6 +128,10 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         emit StopRewardToken(token);
     }
 
+    function isDistributableRewardToken(address token) public view override returns (bool) {
+        return _rewardTokenSet.contains(token) && !_rewardTokenStopped[token];
+    }
+
     function rewardTokenStopped(address token) external view override returns (bool) {
         return _rewardTokenStopped[token];
     }
@@ -141,8 +145,7 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
     }
 
     function distributeRewards(address token, uint256 amount) external payable override returns (bool) {
-        require(_rewardTokenSet.contains(token), "not reward token");
-        require(!_rewardTokenStopped[token], "reward token stopped");
+        require(isDistributableRewardToken(token), "not distributable");
         if (token == IOTX_REWARD_TOKEN) {
             require(amount == msg.value, "rewards dismatch");
         } else {

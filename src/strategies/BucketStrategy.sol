@@ -2,37 +2,28 @@
 pragma solidity ^0.8.19;
 
 import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import "../interfaces/IBucket.sol";
 import "../interfaces/IBucketStrategy.sol";
+import "./BaseStrategy.sol";
 
-contract BucketStrategy is IBucketStrategy, Initializable, ERC721Holder {
+contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
     using EnumerableSet for EnumerableSet.UintSet;
 
     uint256 constant WEEK = 7 days;
     uint256 public constant UINT256_MAX = type(uint256).max;
 
-    /// @inheritdoc IStrategy
-    address public override underlyingToken;
-
-    /// @inheritdoc IStrategy
-    uint256 public override totalAmount;
-
-    /// @inheritdoc IStrategy
-    mapping(address => uint256) public override amount;
-
-    // @inheritdoc IBucletStrategy
+    /// @inheritdoc IBucketStrategy
     mapping(uint256 => uint8) public override stakeStatus;
 
-    // @inheritdoc IBucletStrategy
+    /// @inheritdoc IBucketStrategy
     mapping(uint256 => address) public override bucketStaker;
 
-    // @inheritdoc IBucletStrategy
+    /// @inheritdoc IBucketStrategy
     mapping(uint256 => uint256) public override bucketAmount;
 
-    // @inheritdoc IBucletStrategy
+    /// @inheritdoc IBucketStrategy
     mapping(uint256 => uint256) public override unstakeTime;
 
     /// @inheritdoc IBucketStrategy
@@ -40,8 +31,8 @@ contract BucketStrategy is IBucketStrategy, Initializable, ERC721Holder {
 
     mapping(address => EnumerableSet.UintSet) _stakerBucketList;
 
-    function initialize(address bucketNFT, address bucketRewardPool) public initializer {
-        underlyingToken = bucketNFT;
+    function initialize(address bucketNFT, address manager, address bucketRewardPool) public initializer {
+        __BaseStrategy_init(bucketNFT, manager);
         rewardPool = bucketRewardPool;
     }
 

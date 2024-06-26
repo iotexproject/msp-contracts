@@ -2,7 +2,9 @@
 pragma solidity ^0.8.19;
 
 interface IStrategy {
-    /// @notice The underlying token for staking in this Strategy
+    /**
+     * @notice The underlying token for staking in this Strategy
+     */
     function underlyingToken() external view returns (address);
 
     /**
@@ -14,6 +16,11 @@ interface IStrategy {
      * @notice The total number of extant amount
      */
     function totalAmount() external view returns (uint256);
+
+    /**
+     * @notice strategy manager
+     */
+    function strategyManager() external view returns (address);
 
     /**
      * @notice distribute rewards

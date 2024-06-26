@@ -1,25 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../interfaces/ILSTStrategy.sol";
+import "./BaseStrategy.sol";
 
-contract LSTStrategy is ILSTStrategy, Initializable {
+contract LSTStrategy is ILSTStrategy, BaseStrategy {
     using SafeERC20 for IERC20;
 
     uint256 constant WEEK = 7 days;
-
-    /// @inheritdoc IStrategy
-    address public override underlyingToken;
-
-    // @inheritdoc IStrategy
-    uint256 public override totalAmount;
-
-    // @inheritdoc IStrategy
-    mapping(address => uint256) public override amount;
 
     // @inheritdoc ILSTStrategy
     mapping(address => uint256) public override unstakeTime;
@@ -27,8 +18,8 @@ contract LSTStrategy is ILSTStrategy, Initializable {
     // @inheritdoc ILSTStrategy
     mapping(address => uint256) public override unstakingAmount;
 
-    function initialize(address lst) public initializer {
-        underlyingToken = lst;
+    function initialize(address lst, address manager) public initializer {
+        __BaseStrategy_init(lst, manager);
     }
 
     function stake(uint256 _amount) external override {

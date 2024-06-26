@@ -39,7 +39,7 @@ contract Deployer is Script {
         TransparentUpgradeableProxy strategy = new TransparentUpgradeableProxy(
             address(strategyImpl),
             proxyAdmin,
-            abi.encodeCall(BucketStrategy.initialize, (bucketNFT, address(bucketRewardPool)))
+            abi.encodeCall(BucketStrategy.initialize, (bucketNFT, address(0), address(bucketRewardPool)))
         );
 
         vm.stopBroadcast();

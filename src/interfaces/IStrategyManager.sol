@@ -82,6 +82,11 @@ interface IStrategyManager {
     function rewardTokenCount() external view returns (uint256);
 
     /**
+     * @notice is distributable reward token
+     */
+    function isDistributableRewardToken(address token) external view returns (bool);
+
+    /**
      * @notice check reward token
      */
     function rewardTokenStopped(address token) external view returns (bool);
