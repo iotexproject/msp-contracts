@@ -38,4 +38,29 @@ interface IStrategyManager {
      * @notice The total number of extant shares
      */
     function totalShares(address strategy) external view returns (uint256);
+
+    /**
+     * @notice Distribute rewards with ERC20 or IOTX to strategy.
+     */
+    function distributeRewards(address token, uint256 amount) external payable returns (bool);
+
+    /**
+     * @notice add reward token
+     */
+    function addRewardToken(address token) external;
+
+    /**
+     * @notice add reward token
+     */
+    function stopRewardToken(address token) external;
+
+    /**
+     * @notice check reward token
+     */
+    function isRewardToken(address token) external view returns (bool);
+
+    /**
+     * @notice reward tokens
+     */
+    function rewardTokens() external view returns (address[] memory);
 }
