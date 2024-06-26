@@ -68,31 +68,55 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
         return amount[staker] * accTokenPerAmount[token] / PRECISION_FACTOR - rewardDebt[token][staker];
     }
 
-    function claimReward() external nonReentrant {
-        _claimReward(msg.sender);
+    function pendingReward(address _token, address _staker, uint256 _amount) internal view returns (uint256) {
+        return _amount * accTokenPerAmount[_token] / PRECISION_FACTOR - rewardDebt[_token][_staker];
     }
 
-    function _claimReward(address staker) internal {
-        uint256 reward = pendingReward(IOTX_REWARD_TOKEN, staker);
+    function claimReward() external nonReentrant {
+        uint256 reward = pendingReward(IOTX_REWARD_TOKEN, msg.sender);
         if (reward > 0) {
-            rewardDebt[IOTX_REWARD_TOKEN][staker] =
-                amount[staker] * accTokenPerAmount[IOTX_REWARD_TOKEN] / PRECISION_FACTOR;
-            payable(staker).sendValue(reward);
+            rewardDebt[IOTX_REWARD_TOKEN][msg.sender] =
+                amount[msg.sender] * accTokenPerAmount[IOTX_REWARD_TOKEN] / PRECISION_FACTOR;
+            payable(msg.sender).sendValue(reward);
 
-            emit ClaimReward(IOTX_REWARD_TOKEN, staker, reward);
+            emit ClaimReward(IOTX_REWARD_TOKEN, msg.sender, reward);
         }
 
         address[] memory rewardTokens = IStrategyManager(strategyManager).rewardTokens();
         if (rewardTokens.length > 1) {
             for (uint256 i = 1; i < rewardTokens.length; i++) {
                 address token = rewardTokens[i];
-                reward = pendingReward(token, staker);
+                reward = pendingReward(token, msg.sender);
                 if (reward > 0) {
-                    rewardDebt[token][staker] = amount[staker] * accTokenPerAmount[token] / PRECISION_FACTOR;
+                    rewardDebt[token][msg.sender] = amount[msg.sender] * accTokenPerAmount[token] / PRECISION_FACTOR;
+                    IERC20(token).safeTransfer(msg.sender, reward);
+
+                    emit ClaimReward(token, msg.sender, reward);
+                }
+            }
+        }
+    }
+
+    function _claimReward(address staker, uint256 originAmount, uint256 newAmount) internal {
+        uint256 reward = pendingReward(IOTX_REWARD_TOKEN, staker, originAmount);
+        if (reward > 0) {
+            payable(staker).sendValue(reward);
+
+            emit ClaimReward(IOTX_REWARD_TOKEN, staker, reward);
+        }
+        rewardDebt[IOTX_REWARD_TOKEN][staker] = newAmount * accTokenPerAmount[IOTX_REWARD_TOKEN] / PRECISION_FACTOR;
+
+        address[] memory rewardTokens = IStrategyManager(strategyManager).rewardTokens();
+        if (rewardTokens.length > 1) {
+            for (uint256 i = 1; i < rewardTokens.length; i++) {
+                address token = rewardTokens[i];
+                reward = pendingReward(token, staker, originAmount);
+                if (reward > 0) {
                     IERC20(token).safeTransfer(staker, reward);
 
                     emit ClaimReward(token, staker, reward);
                 }
+                rewardDebt[token][staker] = newAmount * accTokenPerAmount[token] / PRECISION_FACTOR;
             }
         }
     }

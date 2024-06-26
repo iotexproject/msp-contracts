@@ -22,27 +22,32 @@ contract LSTStrategy is ILSTStrategy, BaseStrategy {
         __BaseStrategy_init(lst, manager);
     }
 
-    function stake(uint256 _amount) external override {
+    function stake(uint256 _amount) external override nonReentrant {
         require(_amount > 0, "zero amount");
 
         IERC20(underlyingToken).safeTransferFrom(msg.sender, address(this), _amount);
 
-        uint256 stakingAmount = _amount;
-        amount[msg.sender] += stakingAmount;
+        uint256 originAmount = amount[msg.sender];
+        uint256 newAmount = originAmount + _amount;
+        amount[msg.sender] = newAmount;
+        _claimReward(msg.sender, originAmount, newAmount);
 
-        totalAmount += stakingAmount;
+        totalAmount += _amount;
 
         emit Stake(msg.sender, _amount);
     }
 
-    function unstake(uint256 _amount) external override {
+    function unstake(uint256 _amount) external override nonReentrant {
         require(unstakingAmount[msg.sender] == 0, "exist unstaking");
         uint256 stakingAmount = amount[msg.sender];
         require(stakingAmount >= _amount, "Insufficient staking");
 
-        amount[msg.sender] -= _amount;
+        uint256 originAmount = amount[msg.sender];
+        uint256 newAmount = originAmount - _amount;
+        amount[msg.sender] = newAmount;
         unstakeTime[msg.sender] = block.timestamp;
         unstakingAmount[msg.sender] = _amount;
+        _claimReward(msg.sender, originAmount, newAmount);
 
         totalAmount -= _amount;
 

@@ -37,7 +37,7 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
     }
 
     /// @inheritdoc IBucketStrategy
-    function stake(uint256 bucketId) external override {
+    function stake(uint256 bucketId) external override nonReentrant {
         IBucket bucketContract = IBucket(underlyingToken);
         require(bucketContract.ownerOf(bucketId) == msg.sender, "not owner");
 
@@ -50,8 +50,11 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
         bucketStaker[bucketId] = msg.sender;
         uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, bucket.amount);
         bucketAmount[bucketId] = bucket.amount;
-        amount[msg.sender] += stakingAmount;
+        uint256 originAmount = amount[msg.sender];
+        uint256 newAmount = originAmount + stakingAmount;
+        amount[msg.sender] = newAmount;
         _stakerBucketList[msg.sender].add(bucketId);
+        _claimReward(msg.sender, originAmount, newAmount);
 
         totalAmount += stakingAmount;
 
@@ -59,7 +62,7 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
     }
 
     /// @inheritdoc IBucketStrategy
-    function deposit(uint256 bucketId) external payable override {
+    function deposit(uint256 bucketId) external payable override nonReentrant {
         require(msg.value > 0, "zero amount");
         require(stakeStatus[bucketId] == 1, "not staking bucket");
 
@@ -69,7 +72,10 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
         Bucket memory bucket = bucketContract.bucketOf(bucketId);
         uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, msg.value);
         bucketAmount[bucketId] = bucket.amount;
-        amount[msg.sender] += stakingAmount;
+        uint256 originAmount = amount[msg.sender];
+        uint256 newAmount = originAmount + stakingAmount;
+        amount[msg.sender] = newAmount;
+        _claimReward(msg.sender, originAmount, newAmount);
 
         totalAmount += stakingAmount;
 
@@ -77,7 +83,7 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
     }
 
     /// @inheritdoc IBucketStrategy
-    function unstake(uint256 bucketId) external {
+    function unstake(uint256 bucketId) external nonReentrant {
         require(stakeStatus[bucketId] == 1, "not staking bucket");
         require(bucketStaker[bucketId] == msg.sender, "not staker");
 
@@ -85,9 +91,12 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
         Bucket memory bucket = IBucket(underlyingToken).bucketOf(bucketId);
         uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, bucketAmount[bucketId]);
 
-        amount[msg.sender] -= stakingAmount;
+        uint256 originAmount = amount[msg.sender];
+        uint256 newAmount = amount[msg.sender] - stakingAmount;
+        amount[msg.sender] = newAmount;
         _stakerBucketList[msg.sender].remove(bucketId);
         unstakeTime[bucketId] = block.timestamp;
+        _claimReward(msg.sender, originAmount, newAmount);
 
         totalAmount -= stakingAmount;
 
@@ -111,7 +120,7 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
     }
 
     /// @inheritdoc IBucketStrategy
-    function poke(uint256 bucketId) external override {
+    function poke(uint256 bucketId) external override nonReentrant {
         require(stakeStatus[bucketId] == 1, "not staking bucket");
         Bucket memory bucket = IBucket(underlyingToken).bucketOf(bucketId);
         uint256 oldStakingAmount = bucketAmount[bucketId];
@@ -119,8 +128,11 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
 
         uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, bucket.amount - oldStakingAmount);
 
-        amount[msg.sender] += stakingAmount;
+        uint256 originAmount = amount[msg.sender];
+        uint256 newAmount = amount[msg.sender] + stakingAmount;
+        amount[msg.sender] = newAmount;
         bucketAmount[bucketId] = bucket.amount;
+        _claimReward(msg.sender, originAmount, newAmount);
 
         totalAmount += stakingAmount;
 
