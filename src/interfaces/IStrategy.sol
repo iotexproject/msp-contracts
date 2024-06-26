@@ -14,4 +14,9 @@ interface IStrategy {
      * @notice The total number of extant amount
      */
     function totalAmount() external view returns (uint256);
+
+    /**
+     * @notice distribute rewards
+     */
+    function distributeRewards(address token, uint256 amount) external payable;
 }

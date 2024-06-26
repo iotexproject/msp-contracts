@@ -146,13 +146,11 @@ contract BucketStrategy is IBucketStrategy, Initializable, ERC721Holder {
     }
 
     /// @inheritdoc IBucketStrategy
-    function calculateBucketRestakeAmount(uint256 bucketDuration, uint256 bucketAmount)
-        public
-        pure
-        override
-        returns (uint256)
-    {
+    function calculateBucketRestakeAmount(uint256 _duration, uint256 _amount) public pure override returns (uint256) {
         // TODO calculate bonus by duration
-        return bucketAmount;
+        return _amount;
     }
+
+    /// @inheritdoc IStrategy
+    function distributeRewards(address _token, uint256 _amount) external payable {}
 }

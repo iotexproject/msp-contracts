@@ -9,6 +9,7 @@ interface IStrategyManager {
     event ChangeStrategyRatio(address indexed strategy, uint256 ratio);
     event AddRewardToken(address indexed token);
     event StopRewardToken(address indexed token);
+    event DistributeRewards(address indexed strategy, address indexed token, uint256 rewards);
 
     /**
      * @notice add strategy with ratio
