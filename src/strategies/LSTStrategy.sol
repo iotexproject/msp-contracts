@@ -61,7 +61,4 @@ contract LSTStrategy is ILSTStrategy, BaseStrategy {
 
         emit Withdraw(msg.sender, recipient, _amount);
     }
-
-    /// @inheritdoc IStrategy
-    function distributeRewards(address _token, uint256 _amount) external payable {}
 }

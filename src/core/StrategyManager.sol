@@ -36,6 +36,7 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         require(_strategySet.length() < MAX_STRATEGY, "exceed max strategy");
         require(ratio > 10 && ratio < 5000, "invalid ratio");
         require(!_strategySet.contains(strategy), "strategy exist");
+        require(IStrategy(strategy).strategyManager() == address(this), "invalid strategy manager");
 
         _strategySet.add(strategy);
         strategyRatio[strategy] = ratio;

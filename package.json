@@ -4,8 +4,8 @@
     "license": "MIT",
     "scripts": {
         "compile": "forge test",
-        "format": "forge fmt",
-        "lint": "solhint -w 0 'src/**/*.sol'"
+        "lint": "solhint -w 0 'src/**/*.sol'",
+        "lint:fix": "forge fmt"
     },
     "devDependencies": {
         "solhint": "^5.0.1"

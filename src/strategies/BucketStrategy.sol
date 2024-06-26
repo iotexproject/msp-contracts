@@ -141,7 +141,4 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
         // TODO calculate bonus by duration
         return _amount;
     }
-
-    /// @inheritdoc IStrategy
-    function distributeRewards(address _token, uint256 _amount) external payable {}
 }

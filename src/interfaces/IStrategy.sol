@@ -26,4 +26,9 @@ interface IStrategy {
      * @notice distribute rewards
      */
     function distributeRewards(address token, uint256 amount) external payable;
+
+    /**
+     * @notice claim rewards
+     */
+    function claimReward() external;
 }
