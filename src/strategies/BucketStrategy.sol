@@ -38,27 +38,36 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
 
     /// @inheritdoc IBucketStrategy
     function stake(uint256 bucketId) external override nonReentrant {
+        _stake(msg.sender, bucketId);
+    }
+
+    /// @inheritdoc IBucketStrategy
+    function stake(address staker, uint256 bucketId) external override nonReentrant {
+        _stake(staker, bucketId);
+    }
+
+    function _stake(address staker, uint256 bucketId) internal {
         IBucket bucketContract = IBucket(underlyingToken);
-        require(bucketContract.ownerOf(bucketId) == msg.sender, "not owner");
+        require(bucketContract.ownerOf(bucketId) == staker, "not owner");
 
         Bucket memory bucket = bucketContract.bucketOf(bucketId);
-        require(bucketInLocking(bucket.duration), "not locking bucket");
+        require(bucketInLocking(bucket.unlockedAt), "not locking bucket");
 
-        bucketContract.transferFrom(msg.sender, address(this), bucketId);
+        bucketContract.transferFrom(staker, address(this), bucketId);
 
         stakeStatus[bucketId] = 1;
-        bucketStaker[bucketId] = msg.sender;
+        bucketStaker[bucketId] = staker;
         uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, bucket.amount);
         bucketAmount[bucketId] = bucket.amount;
-        uint256 originAmount = amount[msg.sender];
+        uint256 originAmount = amount[staker];
         uint256 newAmount = originAmount + stakingAmount;
-        amount[msg.sender] = newAmount;
-        _stakerBucketList[msg.sender].add(bucketId);
-        _claimReward(msg.sender, originAmount, newAmount);
+        amount[staker] = newAmount;
+        _stakerBucketList[staker].add(bucketId);
+        _claimReward(staker, originAmount, newAmount);
 
         totalAmount += stakingAmount;
 
-        emit Stake(msg.sender, bucketId, bucket.amount, stakingAmount);
+        emit Stake(staker, bucketId, bucket.amount, stakingAmount);
     }
 
     /// @inheritdoc IBucketStrategy
@@ -72,51 +81,61 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
         Bucket memory bucket = bucketContract.bucketOf(bucketId);
         uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, msg.value);
         bucketAmount[bucketId] = bucket.amount;
-        uint256 originAmount = amount[msg.sender];
+        address staker = bucketStaker[bucketId];
+        uint256 originAmount = amount[staker];
         uint256 newAmount = originAmount + stakingAmount;
-        amount[msg.sender] = newAmount;
-        _claimReward(msg.sender, originAmount, newAmount);
+        amount[staker] = newAmount;
+        _claimReward(staker, originAmount, newAmount);
 
         totalAmount += stakingAmount;
 
-        emit Deposit(msg.sender, bucketId, msg.value, stakingAmount);
+        emit Deposit(staker, bucketId, msg.value, stakingAmount);
     }
 
     /// @inheritdoc IBucketStrategy
-    function unstake(uint256 bucketId) external nonReentrant {
-        require(stakeStatus[bucketId] == 1, "not staking bucket");
-        require(bucketStaker[bucketId] == msg.sender, "not staker");
+    function unstake(uint256[] calldata bucketIds) external override nonReentrant {
+        uint256 unstakeAmount = 0;
+        for (uint256 i = 0; i < bucketIds.length; i++) {
+            uint256 bucketId = bucketIds[i];
+            require(stakeStatus[bucketId] == 1, "not staking bucket");
+            require(bucketStaker[bucketId] == msg.sender, "not staker");
 
-        stakeStatus[bucketId] = 2;
-        Bucket memory bucket = IBucket(underlyingToken).bucketOf(bucketId);
-        uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, bucketAmount[bucketId]);
+            stakeStatus[bucketId] = 2;
+            Bucket memory bucket = IBucket(underlyingToken).bucketOf(bucketId);
+
+            unstakeAmount += calculateBucketRestakeAmount(bucket.duration, bucketAmount[bucketId]);
+
+            _stakerBucketList[msg.sender].remove(bucketId);
+            unstakeTime[bucketId] = block.timestamp;
+
+            emit Unstake(msg.sender, bucketId);
+        }
 
         uint256 originAmount = amount[msg.sender];
-        uint256 newAmount = amount[msg.sender] - stakingAmount;
-        amount[msg.sender] = newAmount;
-        _stakerBucketList[msg.sender].remove(bucketId);
-        unstakeTime[bucketId] = block.timestamp;
+        uint256 newAmount = originAmount - unstakeAmount;
         _claimReward(msg.sender, originAmount, newAmount);
 
-        totalAmount -= stakingAmount;
-
-        emit Unstake(msg.sender, bucketId);
+        totalAmount -= unstakeAmount;
     }
 
     /// @inheritdoc IBucketStrategy
-    function withdraw(uint256 bucketId, address recipient) external {
-        require(stakeStatus[bucketId] == 2, "not unstake bucket");
-        require(bucketStaker[bucketId] == msg.sender, "not staker");
-        require(unstakeTime[bucketId] + WEEK <= block.timestamp, "withdraw freeze");
+    function withdraw(uint256[] calldata bucketIds, address recipient) external override {
+        for (uint256 i = 0; i < bucketIds.length; i++) {
+            uint256 bucketId = bucketIds[i];
 
-        stakeStatus[bucketId] = 0;
-        bucketStaker[bucketId] = address(0);
-        unstakeTime[bucketId] = 0;
-        bucketAmount[bucketId] = 0;
+            require(stakeStatus[bucketId] == 2, "not unstake bucket");
+            require(bucketStaker[bucketId] == msg.sender, "not staker");
+            require(unstakeTime[bucketId] + WEEK <= block.timestamp, "withdraw freeze");
 
-        IBucket(underlyingToken).transferFrom(address(this), recipient, bucketId);
+            stakeStatus[bucketId] = 0;
+            bucketStaker[bucketId] = address(0);
+            unstakeTime[bucketId] = 0;
+            bucketAmount[bucketId] = 0;
 
-        emit Withdraw(msg.sender, bucketId);
+            IBucket(underlyingToken).transferFrom(address(this), recipient, bucketId);
+
+            emit Withdraw(msg.sender, bucketId);
+        }
     }
 
     /// @inheritdoc IBucketStrategy
@@ -139,13 +158,17 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
         emit Poke(msg.sender, bucketId, bucket.amount, stakingAmount);
     }
 
+    function withdrawTime(uint256 bucketId) external view returns (uint256) {
+        return unstakeTime[bucketId] + WEEK;
+    }
+
     /// @inheritdoc IBucketStrategy
     function stakerBuckets(address staker) public view override returns (uint256[] memory) {
         return _stakerBucketList[staker].values();
     }
 
-    function bucketInLocking(uint256 bucketDuration) internal pure returns (bool) {
-        return bucketDuration == UINT256_MAX;
+    function bucketInLocking(uint256 unlockedAt) internal pure returns (bool) {
+        return unlockedAt == UINT256_MAX;
     }
 
     /// @inheritdoc IBucketStrategy

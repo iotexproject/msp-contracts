@@ -26,6 +26,8 @@ interface IBucketStrategy is IStrategy {
 
     function unstakeTime(uint256 bucketId) external view returns (uint256);
 
+    function withdrawTime(uint256 bucketId) external view returns (uint256);
+
     function stakerBuckets(address staker) external view returns (uint256[] memory);
 
     function calculateBucketRestakeAmount(uint256 bucketDuration, uint256 bucketAmount)
@@ -35,11 +37,13 @@ interface IBucketStrategy is IStrategy {
 
     function stake(uint256 bucketId) external;
 
+    function stake(address staker, uint256 bucketId) external;
+
     function deposit(uint256 bucketId) external payable;
 
     function poke(uint256 bucketId) external;
 
-    function unstake(uint256 bucketId) external;
+    function unstake(uint256[] calldata bucketIds) external;
 
-    function withdraw(uint256 bucketId, address recipient) external;
+    function withdraw(uint256[] calldata bucketIds, address recipient) external;
 }

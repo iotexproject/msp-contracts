@@ -64,6 +64,18 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
         emit ReceiveRewards(msg.sender, _token, _amount);
     }
 
+    function pendingRewards(address staker) public view returns (uint256[] memory) {
+        address[] memory rewardTokens = IStrategyManager(strategyManager).rewardTokens();
+        uint256[] memory result = new uint256[](rewardTokens.length);
+
+        for (uint256 i = 0; i < rewardTokens.length; i++) {
+            address token = rewardTokens[i];
+            result[i] = pendingReward(token, staker);
+        }
+
+        return result;
+    }
+
     function pendingReward(address token, address staker) public view returns (uint256) {
         uint256 _accTokenPerAmount = accTokenPerAmount[token];
         if (_accTokenPerAmount == 0) {

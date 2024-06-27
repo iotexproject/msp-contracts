@@ -23,18 +23,26 @@ contract LSTStrategy is ILSTStrategy, BaseStrategy {
     }
 
     function stake(uint256 _amount) external override nonReentrant {
+        _stake(msg.sender, _amount);
+    }
+
+    function stake(address _staker, uint256 _amount) external override nonReentrant {
+        _stake(_staker, _amount);
+    }
+
+    function _stake(address _staker, uint256 _amount) internal {
         require(_amount > 0, "zero amount");
 
-        IERC20(underlyingToken).safeTransferFrom(msg.sender, address(this), _amount);
+        IERC20(underlyingToken).safeTransferFrom(_staker, address(this), _amount);
 
-        uint256 originAmount = amount[msg.sender];
+        uint256 originAmount = amount[_staker];
         uint256 newAmount = originAmount + _amount;
-        amount[msg.sender] = newAmount;
-        _claimReward(msg.sender, originAmount, newAmount);
+        amount[_staker] = newAmount;
+        _claimReward(_staker, originAmount, newAmount);
 
         totalAmount += _amount;
 
-        emit Stake(msg.sender, _amount);
+        emit Stake(_staker, _amount);
     }
 
     function unstake(uint256 _amount) external override nonReentrant {
@@ -65,5 +73,9 @@ contract LSTStrategy is ILSTStrategy, BaseStrategy {
         IERC20(underlyingToken).safeTransfer(recipient, _amount);
 
         emit Withdraw(msg.sender, recipient, _amount);
+    }
+
+    function withdrawTime(address staker) external view returns (uint256) {
+        return unstakeTime[staker] + WEEK;
     }
 }

@@ -10,9 +10,13 @@ interface ILSTStrategy is IStrategy {
 
     function unstakeTime(address staker) external view returns (uint256);
 
+    function withdrawTime(address staker) external view returns (uint256);
+
     function unstakingAmount(address staker) external view returns (uint256);
 
     function stake(uint256 _amount) external;
+
+    function stake(address _staker, uint256 _amount) external;
 
     function unstake(uint256 _amount) external;
 
