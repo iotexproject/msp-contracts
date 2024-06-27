@@ -50,7 +50,7 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
 
     /// @inheritdoc IStrategy
     function distributeRewards(address _token, uint256 _amount) external payable virtual override {
-        require(IStrategyManager(strategyManager).isDistributableRewardToken(_token), "not distributable");
+        require(IStrategyManager(strategyManager).isRewardToken(_token), "not reward token");
         if (_token == IOTX_REWARD_TOKEN) {
             require(_amount == msg.value, "rewards dismatch");
         } else {
@@ -65,11 +65,33 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
     }
 
     function pendingReward(address token, address staker) public view returns (uint256) {
+        uint256 _accTokenPerAmount = accTokenPerAmount[token];
+        if (_accTokenPerAmount == 0) {
+            return 0;
+        }
         return amount[staker] * accTokenPerAmount[token] / PRECISION_FACTOR - rewardDebt[token][staker];
     }
 
     function pendingReward(address _token, address _staker, uint256 _amount) internal view returns (uint256) {
-        return _amount * accTokenPerAmount[_token] / PRECISION_FACTOR - rewardDebt[_token][_staker];
+        uint256 _accTokenPerAmount = accTokenPerAmount[_token];
+        if (_amount == 0 && _accTokenPerAmount == 0) {
+            return 0;
+        }
+        return _amount * _accTokenPerAmount / PRECISION_FACTOR - rewardDebt[_token][_staker];
+    }
+
+    function claimReward(address token) external nonReentrant {
+        uint256 reward = pendingReward(token, msg.sender);
+        if (reward > 0) {
+            rewardDebt[token][msg.sender] = amount[msg.sender] * accTokenPerAmount[token] / PRECISION_FACTOR;
+            if (token == IOTX_REWARD_TOKEN) {
+                payable(msg.sender).sendValue(reward);
+            } else {
+                IERC20(token).safeTransfer(msg.sender, reward);
+            }
+
+            emit ClaimReward(token, msg.sender, reward);
+        }
     }
 
     function claimReward() external nonReentrant {
@@ -104,7 +126,10 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
 
             emit ClaimReward(IOTX_REWARD_TOKEN, staker, reward);
         }
-        rewardDebt[IOTX_REWARD_TOKEN][staker] = newAmount * accTokenPerAmount[IOTX_REWARD_TOKEN] / PRECISION_FACTOR;
+        uint256 _accTokenPerAmount = accTokenPerAmount[IOTX_REWARD_TOKEN];
+        if (_accTokenPerAmount > 0) {
+            rewardDebt[IOTX_REWARD_TOKEN][staker] = newAmount * _accTokenPerAmount / PRECISION_FACTOR;
+        }
 
         address[] memory rewardTokens = IStrategyManager(strategyManager).rewardTokens();
         if (rewardTokens.length > 1) {
@@ -116,7 +141,10 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
 
                     emit ClaimReward(token, staker, reward);
                 }
-                rewardDebt[token][staker] = newAmount * accTokenPerAmount[token] / PRECISION_FACTOR;
+                _accTokenPerAmount = accTokenPerAmount[token];
+                if (_accTokenPerAmount > 0) {
+                    rewardDebt[token][staker] = newAmount * _accTokenPerAmount / PRECISION_FACTOR;
+                }
             }
         }
     }

@@ -8,7 +8,7 @@ interface IStrategyManager {
     event RemoveStrategy(address indexed strategy);
     event ChangeStrategyRatio(address indexed strategy, uint256 ratio);
     event AddRewardToken(address indexed token);
-    event StopRewardToken(address indexed token);
+    event RemoveRewardToken(address indexed token);
     event DistributeRewards(address indexed strategy, address indexed token, uint256 rewards);
 
     /**
@@ -17,9 +17,9 @@ interface IStrategyManager {
     function addStrategy(address strategy, uint256 ratio) external;
 
     /**
-     * @notice stop strategy
+     * @notice remove strategy
      */
-    function stopStrategy(address strategy) external;
+    function removeStrategy(address strategy) external;
 
     /**
      * @notice change strategy ratio
@@ -72,9 +72,9 @@ interface IStrategyManager {
     function addRewardToken(address token) external;
 
     /**
-     * @notice add reward token
+     * @notice remove reward token
      */
-    function stopRewardToken(address token) external;
+    function removeRewardToken(address token) external;
 
     /**
      * @notice reward token count
@@ -82,14 +82,9 @@ interface IStrategyManager {
     function rewardTokenCount() external view returns (uint256);
 
     /**
-     * @notice is distributable reward token
-     */
-    function isDistributableRewardToken(address token) external view returns (bool);
-
-    /**
      * @notice check reward token
      */
-    function rewardTokenStopped(address token) external view returns (bool);
+    function isRewardToken(address token) external view returns (bool);
 
     /**
      * @notice reward tokens

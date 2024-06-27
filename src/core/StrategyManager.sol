@@ -22,7 +22,6 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
 
     EnumerableSet.AddressSet _strategySet;
     EnumerableSet.AddressSet _rewardTokenSet;
-    mapping(address => bool) _rewardTokenStopped;
 
     function initialize() public initializer {
         __Ownable_init_unchained();
@@ -44,7 +43,7 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         emit AddStrategy(strategy, ratio);
     }
 
-    function stopStrategy(address strategy) external override onlyOwner {
+    function removeStrategy(address strategy) external override onlyOwner {
         require(_strategySet.contains(strategy), "strategy not exist");
 
         _strategySet.remove(strategy);
@@ -120,21 +119,17 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         emit AddRewardToken(token);
     }
 
-    function stopRewardToken(address token) external override onlyOwner {
+    function removeRewardToken(address token) external override onlyOwner {
         require(token != IOTX_REWARD_TOKEN, "invalid token");
         require(_rewardTokenSet.contains(token), "token not exist");
 
-        _rewardTokenStopped[token] = true;
+        _rewardTokenSet.remove(token);
 
-        emit StopRewardToken(token);
+        emit RemoveRewardToken(token);
     }
 
-    function isDistributableRewardToken(address token) public view override returns (bool) {
-        return _rewardTokenSet.contains(token) && !_rewardTokenStopped[token];
-    }
-
-    function rewardTokenStopped(address token) external view override returns (bool) {
-        return _rewardTokenStopped[token];
+    function isRewardToken(address token) public view override returns (bool) {
+        return _rewardTokenSet.contains(token);
     }
 
     function rewardTokenCount() external view override returns (uint256) {
@@ -146,7 +141,7 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
     }
 
     function distributeRewards(address token, uint256 amount) external payable override returns (bool) {
-        require(isDistributableRewardToken(token), "not distributable");
+        require(_rewardTokenSet.contains(token), "not distributable");
         if (token == IOTX_REWARD_TOKEN) {
             require(amount == msg.value, "rewards dismatch");
         } else {
@@ -161,11 +156,13 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
             address strategy = _strategies[i];
             uint256 rewards = _perShare * totalShares(strategy) / PRECISION_FACTOR;
 
-            if (token == IOTX_REWARD_TOKEN) {
-                IStrategy(strategy).distributeRewards{value: rewards}(token, rewards);
-            } else {
-                IERC20(token).safeApprove(strategy, rewards);
-                IStrategy(strategy).distributeRewards(token, rewards);
+            if (rewards > 0) {
+                if (token == IOTX_REWARD_TOKEN) {
+                    IStrategy(strategy).distributeRewards{value: rewards}(token, rewards);
+                } else {
+                    IERC20(token).safeApprove(strategy, rewards);
+                    IStrategy(strategy).distributeRewards(token, rewards);
+                }
             }
 
             emit DistributeRewards(strategy, token, rewards);
