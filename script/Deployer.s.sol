@@ -7,6 +7,7 @@ import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.s
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import {BucketRewardPool} from "src/core/BucketRewardPool.sol";
+import {IStrategyManager, StrategyManager} from "src/core/StrategyManager.sol";
 import {BucketStrategy} from "src/strategies/BucketStrategy.sol";
 
 contract Deployer is Script {
@@ -26,6 +27,7 @@ contract Deployer is Script {
 
         if (proxyAdmin == address(0)) {
             proxyAdmin = address(new ProxyAdmin());
+            console.log("Deployed PROXY_ADMIN_ADDRESS: '%s'", proxyAdmin);
         }
 
         // deploy BucketRewardPool
@@ -34,17 +36,28 @@ contract Deployer is Script {
             address(bucketRewardPoolImpl), proxyAdmin, abi.encodeCall(BucketRewardPool.initialize, ())
         );
 
+        // deploy StrategyManager
+        StrategyManager strategyManagerImpl = new StrategyManager();
+        TransparentUpgradeableProxy strategyManager = new TransparentUpgradeableProxy(
+            address(strategyManagerImpl), proxyAdmin, abi.encodeCall(StrategyManager.initialize, ())
+        );
+
         // deploy BucketStrategy
         BucketStrategy strategyImpl = new BucketStrategy();
         TransparentUpgradeableProxy strategy = new TransparentUpgradeableProxy(
             address(strategyImpl),
             proxyAdmin,
-            abi.encodeCall(BucketStrategy.initialize, (bucketNFT, address(0), address(bucketRewardPool)))
+            abi.encodeCall(BucketStrategy.initialize, (bucketNFT, address(strategyManager), address(bucketRewardPool)))
         );
+
+        // will fail at IoTeX chain
+        // IStrategyManager strategyManagerProxy = IStrategyManager(address(strategyManager));
+        // strategyManagerProxy.addStrategy(address(strategy), 100);
 
         vm.stopBroadcast();
 
         console.log("Deployed BucketRewardPool: '%s'", address(bucketRewardPool));
+        console.log("Deployed StrategyManager: '%s'", address(strategyManager));
         console.log("Deployed BucketStrategy: '%s'", address(strategy));
     }
 }
