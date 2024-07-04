@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
+import "../interfaces/IVoter.sol";
 import "../interfaces/IBucket.sol";
 import "../interfaces/IBucketStrategy.sol";
 import "./BaseStrategy.sol";
@@ -31,8 +32,8 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
 
     mapping(address => EnumerableSet.UintSet) _stakerBucketList;
 
-    function initialize(address bucketNFT, address manager, address bucketRewardPool) public initializer {
-        __BaseStrategy_init(bucketNFT, manager);
+    function initialize(address bucketNFT, address manager, address bucketRewardPool, address voter) public initializer {
+        __BaseStrategy_init(bucketNFT, manager, voter);
         rewardPool = bucketRewardPool;
     }
 
@@ -114,8 +115,8 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
         uint256 originAmount = amount[msg.sender];
         uint256 newAmount = originAmount - unstakeAmount;
         _claimReward(msg.sender, originAmount, newAmount);
-
         totalAmount -= unstakeAmount;
+        IVoter(voter).poke();
     }
 
     /// @inheritdoc IBucketStrategy

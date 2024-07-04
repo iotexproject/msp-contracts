@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import "../interfaces/IVoter.sol";
 import "../interfaces/ILSTStrategy.sol";
 import "./BaseStrategy.sol";
 
@@ -18,8 +19,8 @@ contract LSTStrategy is ILSTStrategy, BaseStrategy {
     // @inheritdoc ILSTStrategy
     mapping(address => uint256) public override unstakingAmount;
 
-    function initialize(address lst, address manager) public initializer {
-        __BaseStrategy_init(lst, manager);
+    function initialize(address lst, address manager, address voter) public initializer {
+        __BaseStrategy_init(lst, manager, voter);
     }
 
     function stake(uint256 _amount) external override nonReentrant {
@@ -58,6 +59,7 @@ contract LSTStrategy is ILSTStrategy, BaseStrategy {
         _claimReward(msg.sender, originAmount, newAmount);
 
         totalAmount -= _amount;
+        IVoter(voter).poke();
 
         emit Unstake(msg.sender, _amount);
     }
