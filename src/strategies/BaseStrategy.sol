@@ -31,9 +31,6 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
     /// @inheritdoc IStrategy
     address public override strategyManager;
 
-    /// @inheritdoc IStrategy
-    address public voter;
-
     // token address -> reward
     mapping(address => uint256) public remainingReward;
 
@@ -43,11 +40,10 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
     // token address -> staker address -> reward debt
     mapping(address => mapping(address => uint256)) public rewardDebt;
 
-    function __BaseStrategy_init(address underlyingToken_, address strategyManager_, address voter_) internal onlyInitializing {
+    function __BaseStrategy_init(address underlyingToken_, address strategyManager_) internal onlyInitializing {
         __Ownable_init_unchained();
         __ReentrancyGuard_init_unchained();
 
-        voter = voter_;
         underlyingToken = underlyingToken_;
         strategyManager = strategyManager_;
     }

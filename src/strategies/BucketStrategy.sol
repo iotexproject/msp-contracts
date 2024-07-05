@@ -32,8 +32,8 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
 
     mapping(address => EnumerableSet.UintSet) _stakerBucketList;
 
-    function initialize(address bucketNFT, address manager, address bucketRewardPool, address voter) public initializer {
-        __BaseStrategy_init(bucketNFT, manager, voter);
+    function initialize(address bucketNFT, address manager, address bucketRewardPool) public initializer {
+        __BaseStrategy_init(bucketNFT, manager);
         rewardPool = bucketRewardPool;
     }
 
@@ -115,8 +115,9 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
         uint256 originAmount = amount[msg.sender];
         uint256 newAmount = originAmount - unstakeAmount;
         _claimReward(msg.sender, originAmount, newAmount);
+        amount[msg.sender] = newAmount;
         totalAmount -= unstakeAmount;
-        IVoter(voter).poke();
+        IStrategyManager(strategyManager).poke(msg.sender);
     }
 
     /// @inheritdoc IBucketStrategy

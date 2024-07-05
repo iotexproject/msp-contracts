@@ -90,4 +90,9 @@ interface IStrategyManager {
      * @notice reward tokens
      */
     function rewardTokens() external view returns (address[] memory);
+
+    /**
+     * @notice poke share for user
+     */
+    function poke(address user) external;
 }

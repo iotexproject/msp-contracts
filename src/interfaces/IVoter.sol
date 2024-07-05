@@ -5,5 +5,5 @@ interface IVoter {
     /*
     * @notice update share in Voter when user withdraw
     */
-    function poke() external;
+    function poke(address _user) external;
 }
