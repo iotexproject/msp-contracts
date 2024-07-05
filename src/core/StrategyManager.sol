@@ -122,6 +122,13 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         emit AddRewardToken(token);
     }
 
+    function setVoter(address _voter) external onlyOwner  {
+        require(_voter != address(0), "zero address");
+        require(_voter != voter, "same address");
+
+        voter = _voter;
+    }
+
     function removeRewardToken(address token) external override onlyOwner {
         require(token != IOTX_REWARD_TOKEN, "invalid token");
         require(_rewardTokenSet.contains(token), "token not exist");
