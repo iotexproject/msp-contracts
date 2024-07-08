@@ -60,7 +60,7 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         require(ratio > 10 && ratio < 5000, "invalid ratio");
 
         strategyRatio[strategy] = ratio;
-
+        IVoter(voter).updateRatio(strategy, ratio);
         emit ChangeStrategyRatio(strategy, ratio);
     }
 
@@ -122,7 +122,7 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         emit AddRewardToken(token);
     }
 
-    function setVoter(address _voter) external onlyOwner  {
+    function setVoter(address _voter) external onlyOwner {
         require(_voter != address(0), "zero address");
         require(_voter != voter, "same address");
 
