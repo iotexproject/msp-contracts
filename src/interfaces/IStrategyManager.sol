@@ -44,7 +44,7 @@ interface IStrategyManager {
     /**
      * @notice convenience function for fetching the total shares of `user`
      */
-    function shares(address user) external view returns (uint256);
+    function shares(address user) external view returns (uint256, address[] memory, uint256[] memory);
 
     /**
      * @notice convenience function for fetching the total shares of `user`

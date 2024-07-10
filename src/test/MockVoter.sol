@@ -15,7 +15,7 @@ contract MockVoter is IVoter {
     }
 
     function poke(address _user) external {
-        uint256 share = manager.shares(_user);
+        (uint256 share,,) = manager.shares(_user);
         amount[_user] = share;
     }
 

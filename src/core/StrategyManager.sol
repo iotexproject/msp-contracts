@@ -72,17 +72,24 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         return _strategySet.values();
     }
 
-    function shares(address staker) external view override returns (uint256) {
+    function shares(address staker) external view override returns (uint256, address[] memory, uint256[] memory) {
         address[] memory _strategies = _strategySet.values();
+        address[] memory _shareStrategies = new address[](0);
+        uint256[] memory _shares = new uint256[](0);
         uint256 result = 0;
         for (uint256 i = 0; i < _strategies.length; i++) {
             address strategy = _strategies[i];
             uint256 ratio = strategyRatio[strategy];
 
-            result += IStrategy(_strategies[i]).amount(staker) * ratio / RATIO_FACTOR;
+            uint256 _share =  IStrategy(_strategies[i]).amount(staker) * ratio / RATIO_FACTOR;
+            if (_share > 0){
+                _shares.push(_share);
+                _shareStrategies.push(_strategies[i]);
+                result += _share;
+            }
         }
 
-        return result;
+        return (result, _shareStrategies, _shares);
     }
 
     function shares(address staker, address strategy) external view override returns (uint256) {
