@@ -5,6 +5,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import "../interfaces/IVoter.sol";
 import "../interfaces/IStrategy.sol";
 import "../interfaces/IStrategyManager.sol";
 
@@ -19,6 +20,8 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
     uint256 public constant PRECISION_FACTOR = 12;
 
     mapping(address => uint256) public override strategyRatio;
+
+    address public voter;
 
     EnumerableSet.AddressSet _strategySet;
     EnumerableSet.AddressSet _rewardTokenSet;
@@ -119,6 +122,13 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         emit AddRewardToken(token);
     }
 
+    function setVoter(address _voter) external onlyOwner  {
+        require(_voter != address(0), "zero address");
+        require(_voter != voter, "same address");
+
+        voter = _voter;
+    }
+
     function removeRewardToken(address token) external override onlyOwner {
         require(token != IOTX_REWARD_TOKEN, "invalid token");
         require(_rewardTokenSet.contains(token), "token not exist");
@@ -169,5 +179,9 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         }
 
         return true;
+    }
+
+    function poke(address user) external {
+        IVoter(voter).poke(user);
     }
 }

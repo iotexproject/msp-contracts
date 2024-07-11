@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import "../interfaces/IStrategyManager.sol";
 import "../interfaces/ILSTStrategy.sol";
 import "./BaseStrategy.sol";
 
@@ -58,6 +59,7 @@ contract LSTStrategy is ILSTStrategy, BaseStrategy {
         _claimReward(msg.sender, originAmount, newAmount);
 
         totalAmount -= _amount;
+        IStrategyManager(strategyManager).poke(msg.sender);
 
         emit Unstake(msg.sender, _amount);
     }

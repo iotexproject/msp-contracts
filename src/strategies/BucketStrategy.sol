@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
+import "../interfaces/IVoter.sol";
 import "../interfaces/IBucket.sol";
 import "../interfaces/IBucketStrategy.sol";
 import "./BaseStrategy.sol";
@@ -114,8 +115,9 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
         uint256 originAmount = amount[msg.sender];
         uint256 newAmount = originAmount - unstakeAmount;
         _claimReward(msg.sender, originAmount, newAmount);
-
+        amount[msg.sender] = newAmount;
         totalAmount -= unstakeAmount;
+        IStrategyManager(strategyManager).poke(msg.sender);
     }
 
     /// @inheritdoc IBucketStrategy
