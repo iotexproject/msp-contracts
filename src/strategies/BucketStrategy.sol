@@ -161,7 +161,10 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
     }
 
     function withdrawTime(uint256 bucketId) external view returns (uint256) {
-        return unstakeTime[bucketId] + WEEK;
+        uint256 _unstakeTime = unstakeTime[bucketId];
+        require(_unstakeTime > 0, "invalid bucket");
+
+        return _unstakeTime + WEEK;
     }
 
     /// @inheritdoc IBucketStrategy
