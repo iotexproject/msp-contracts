@@ -99,6 +99,7 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
             address strategy = _strategies[i];
             uint256 ratio = strategyRatio[strategy];
 
+            // todo. use strategy variable other than _strategies[i]
             result += IStrategy(_strategies[i]).totalAmount() * ratio / RATIO_FACTOR;
         }
 
@@ -150,6 +151,7 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         return _rewardTokenSet.values();
     }
 
+    // todo. return value deleted ?
     function distributeRewards(address token, uint256 amount) external payable override returns (bool) {
         require(_rewardTokenSet.contains(token), "not distributable");
         if (token == IOTX_REWARD_TOKEN) {

@@ -12,6 +12,7 @@ import "./BaseStrategy.sol";
 contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
     using EnumerableSet for EnumerableSet.UintSet;
 
+    // todo. maybe move the constant to BaseStrategy?
     uint256 constant WEEK = 7 days;
     uint256 public constant UINT256_MAX = type(uint256).max;
 
