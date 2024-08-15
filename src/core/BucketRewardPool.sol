@@ -19,11 +19,13 @@ contract BucketRewardPool is IBucketRewardPool, OwnableUpgradeable {
         __Ownable_init_unchained();
     }
 
+    // todo. whether check newCommitter like in setVoter in StrategyManager.sol ?
     function setCommitter(address newCommitter) external onlyOwner {
         committer = newCommitter;
         emit SetCommitter(newCommitter);
     }
 
+    // todo. whether check newApprover like in setVoter in StrategyManager.sol ?
     function setApprover(address newApprover) external onlyOwner {
         approver = newApprover;
         emit SetApprover(newApprover);
@@ -39,6 +41,7 @@ contract BucketRewardPool is IBucketRewardPool, OwnableUpgradeable {
 
     function commitRoot(uint256 batch, bytes32 root) external override {
         require(committer == msg.sender, "not committer");
+        // todo. bug fix, should be ==> approvedBatch[batch]
         require(!approvedBatch[batch], "already approved");
 
         batchRoot[batch] = root;
@@ -53,6 +56,7 @@ contract BucketRewardPool is IBucketRewardPool, OwnableUpgradeable {
         emit ApproveRoot(msg.sender, batch);
     }
 
+    // todo. not need authority ?
     receive() external payable {
         uint256 batch = ++currentbatch;
         emit BatchReward(msg.sender, batch, msg.value);

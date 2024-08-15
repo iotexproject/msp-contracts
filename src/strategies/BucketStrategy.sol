@@ -12,6 +12,7 @@ import "./BaseStrategy.sol";
 contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
     using EnumerableSet for EnumerableSet.UintSet;
 
+    // todo. maybe move the constant to BaseStrategy?
     uint256 constant WEEK = 7 days;
     uint256 public constant UINT256_MAX = type(uint256).max;
 
@@ -49,6 +50,7 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
 
     function _stake(address staker, uint256 bucketId) internal {
         IBucket bucketContract = IBucket(underlyingToken);
+        // todo. don't check owner but approve, otherwise the deposit by proxy will not be handled.
         require(bucketContract.ownerOf(bucketId) == staker, "not owner");
 
         Bucket memory bucket = bucketContract.bucketOf(bucketId);
@@ -56,6 +58,7 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
 
         bucketContract.transferFrom(staker, address(this), bucketId);
 
+        // todo. Define a meaningful constant ?
         stakeStatus[bucketId] = 1;
         bucketStaker[bucketId] = staker;
         uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, bucket.amount);
@@ -79,6 +82,7 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
         IBucket bucketContract = IBucket(underlyingToken);
         bucketContract.deposit{value: msg.value}(bucketId);
 
+        // todo. maybe extract a common func with _stake() to reduce redundancy logic.
         Bucket memory bucket = bucketContract.bucketOf(bucketId);
         uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, msg.value);
         bucketAmount[bucketId] = bucket.amount;
@@ -101,6 +105,7 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
             require(stakeStatus[bucketId] == 1, "not staking bucket");
             require(bucketStaker[bucketId] == msg.sender, "not staker");
 
+            // todo. Define a meaningful constant ?
             stakeStatus[bucketId] = 2;
             Bucket memory bucket = IBucket(underlyingToken).bucketOf(bucketId);
 
@@ -129,11 +134,13 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
             require(bucketStaker[bucketId] == msg.sender, "not staker");
             require(unstakeTime[bucketId] + WEEK <= block.timestamp, "withdraw freeze");
 
+            // todo. Define a meaningful constant ?
             stakeStatus[bucketId] = 0;
             bucketStaker[bucketId] = address(0);
             unstakeTime[bucketId] = 0;
             bucketAmount[bucketId] = 0;
 
+            // todo. the amount of IOTX in bucket don't need transfer to recipient?
             IBucket(underlyingToken).transferFrom(address(this), recipient, bucketId);
 
             emit Withdraw(msg.sender, bucketId);
@@ -145,6 +152,7 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
         require(stakeStatus[bucketId] == 1, "not staking bucket");
         Bucket memory bucket = IBucket(underlyingToken).bucketOf(bucketId);
         uint256 oldStakingAmount = bucketAmount[bucketId];
+        // todo. only handle bigger ?
         require(bucket.amount > oldStakingAmount, "invalid bucket amount");
 
         uint256 stakingAmount = calculateBucketRestakeAmount(bucket.duration, bucket.amount - oldStakingAmount);

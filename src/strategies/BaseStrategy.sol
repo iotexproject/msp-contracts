@@ -57,6 +57,7 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
             IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
         }
 
+        // todo. if totalAmount == 0, the rewardValue will not be claim
         if (totalAmount > 0) {
             accTokenPerAmount[_token] = accTokenPerAmount[_token] + (_amount * PRECISION_FACTOR) / totalAmount;
         }
@@ -86,6 +87,7 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
 
     function pendingReward(address _token, address _staker, uint256 _amount) internal view returns (uint256) {
         uint256 _accTokenPerAmount = accTokenPerAmount[_token];
+        // todo. maybe only check _accTokenPerAmount==0?
         if (_amount == 0 && _accTokenPerAmount == 0) {
             return 0;
         }
@@ -95,6 +97,7 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
     function claimReward(address token) external nonReentrant {
         uint256 reward = pendingReward(token, msg.sender);
         if (reward > 0) {
+            // todo. whether rewardDebt[token][msg.sender] += reward?
             rewardDebt[token][msg.sender] = amount[msg.sender] * accTokenPerAmount[token] / PRECISION_FACTOR;
             if (token == IOTX_REWARD_TOKEN) {
                 payable(msg.sender).sendValue(reward);
@@ -109,6 +112,7 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
     function claimReward() external nonReentrant {
         uint256 reward = pendingReward(IOTX_REWARD_TOKEN, msg.sender);
         if (reward > 0) {
+            // todo. whether rewardDebt[token][msg.sender] += reward?
             rewardDebt[IOTX_REWARD_TOKEN][msg.sender] =
                 amount[msg.sender] * accTokenPerAmount[IOTX_REWARD_TOKEN] / PRECISION_FACTOR;
             payable(msg.sender).sendValue(reward);
@@ -122,6 +126,7 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
                 address token = rewardTokens[i];
                 reward = pendingReward(token, msg.sender);
                 if (reward > 0) {
+                    // todo. whether rewardDebt[token][msg.sender] += reward?
                     rewardDebt[token][msg.sender] = amount[msg.sender] * accTokenPerAmount[token] / PRECISION_FACTOR;
                     IERC20(token).safeTransfer(msg.sender, reward);
 
@@ -138,6 +143,7 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
 
             emit ClaimReward(IOTX_REWARD_TOKEN, staker, reward);
         }
+        // todo. maybe move forward follow patten: Checks-Effects-Interactions
         uint256 _accTokenPerAmount = accTokenPerAmount[IOTX_REWARD_TOKEN];
         if (_accTokenPerAmount > 0) {
             rewardDebt[IOTX_REWARD_TOKEN][staker] = newAmount * _accTokenPerAmount / PRECISION_FACTOR;
@@ -155,6 +161,7 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
                 }
                 _accTokenPerAmount = accTokenPerAmount[token];
                 if (_accTokenPerAmount > 0) {
+                    // todo. maybe move forward follow patten: Checks-Effects-Interactions
                     rewardDebt[token][staker] = newAmount * _accTokenPerAmount / PRECISION_FACTOR;
                 }
             }

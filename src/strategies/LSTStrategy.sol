@@ -34,6 +34,8 @@ contract LSTStrategy is ILSTStrategy, BaseStrategy {
     function _stake(address _staker, uint256 _amount) internal {
         require(_amount > 0, "zero amount");
 
+        // todo. maybe use msg.sender not _staker.
+        // Otherwise, the business by the proxy will not be processed
         IERC20(underlyingToken).safeTransferFrom(_staker, address(this), _amount);
 
         uint256 originAmount = amount[_staker];
