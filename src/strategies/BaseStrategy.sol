@@ -87,6 +87,7 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
 
     function pendingReward(address _token, address _staker, uint256 _amount) internal view returns (uint256) {
         uint256 _accTokenPerAmount = accTokenPerAmount[_token];
+        // todo. maybe only check _accTokenPerAmount==0?
         if (_amount == 0 && _accTokenPerAmount == 0) {
             return 0;
         }
