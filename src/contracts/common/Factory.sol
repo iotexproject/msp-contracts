@@ -28,6 +28,8 @@ contract Factory is Registry, Ownable, IFactory {
         _;
     }
 
+    constructor(address owner_) Ownable(owner_) {}
+
     /**
      * @inheritdoc IFactory
      */
