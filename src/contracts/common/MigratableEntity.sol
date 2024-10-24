@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import {IMigratableEntity} from "../../interfaces/common/IMigratableEntity.sol";
 
@@ -26,7 +26,9 @@ abstract contract MigratableEntity is
         _;
     }
 
-    constructor(address factory) {
+    constructor(
+        address factory
+    ) {
         _disableInitializers();
 
         FACTORY = factory;
@@ -42,11 +44,11 @@ abstract contract MigratableEntity is
     /**
      * @inheritdoc IMigratableEntity
      */
-    function initialize(uint64 initialVersion, address owner_, bytes calldata data)
-        external
-        notInitialized
-        reinitializer(initialVersion)
-    {
+    function initialize(
+        uint64 initialVersion,
+        address owner_,
+        bytes calldata data
+    ) external notInitialized reinitializer(initialVersion) {
         __ReentrancyGuard_init();
 
         if (owner_ != address(0)) {
@@ -67,14 +69,17 @@ abstract contract MigratableEntity is
         _migrateInternal(_getInitializedVersion(), newVersion, data);
     }
 
-    function _migrateInternal(uint64 oldVersion, uint64 newVersion, bytes calldata data)
-        private
-        reinitializer(newVersion)
-    {
+    function _migrateInternal(
+        uint64 oldVersion,
+        uint64 newVersion,
+        bytes calldata data
+    ) private reinitializer(newVersion) {
         _migrate(oldVersion, newVersion, data);
     }
 
     function _initialize(uint64, /* initialVersion */ address, /* owner */ bytes memory /* data */ ) internal virtual {}
 
     function _migrate(uint64, /* oldVersion */ uint64, /* newVersion */ bytes calldata /* data */ ) internal virtual {}
+
+    uint256[10] private __gap;
 }

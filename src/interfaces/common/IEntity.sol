@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 interface IEntity {
+    error NotInitialized();
+
     /**
      * @notice Get the factory's address.
      * @return address of the factory
@@ -18,5 +20,7 @@ interface IEntity {
      * @notice Initialize this entity contract by using a given data.
      * @param data some data to use
      */
-    function initialize(bytes calldata data) external;
+    function initialize(
+        bytes calldata data
+    ) external;
 }

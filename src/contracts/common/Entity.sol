@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
 import {IEntity} from "../../interfaces/common/IEntity.sol";
 
@@ -9,12 +9,12 @@ abstract contract Entity is Initializable, IEntity {
     /**
      * @inheritdoc IEntity
      */
-    address public immutable override FACTORY;
+    address public immutable FACTORY;
 
     /**
      * @inheritdoc IEntity
      */
-    uint64 public immutable override TYPE;
+    uint64 public immutable TYPE;
 
     constructor(address factory, uint64 type_) {
         _disableInitializers();
@@ -26,9 +26,13 @@ abstract contract Entity is Initializable, IEntity {
     /**
      * @inheritdoc IEntity
      */
-    function initialize(bytes calldata data) external override initializer {
+    function initialize(
+        bytes calldata data
+    ) external initializer {
         _initialize(data);
     }
 
-    function _initialize(bytes calldata /* data */ ) internal virtual {}
+    function _initialize(
+        bytes calldata /* data */
+    ) internal virtual {}
 }
