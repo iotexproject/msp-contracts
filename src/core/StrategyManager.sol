@@ -8,6 +8,7 @@ import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeE
 import "../interfaces/IVoter.sol";
 import "../interfaces/IStrategy.sol";
 import "../interfaces/IStrategyManager.sol";
+import "../interfaces/IRatioManager.sol";
 
 contract StrategyManager is IStrategyManager, OwnableUpgradeable {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -15,53 +16,43 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
 
     uint256 public constant MAX_REWARD_TOKEN = 32;
     uint256 public constant MAX_STRATEGY = 32;
-    uint256 public constant RATIO_FACTOR = 100;
     address public constant IOTX_REWARD_TOKEN = address(1);
     uint256 public constant PRECISION_FACTOR = 12;
 
-    mapping(address => uint256) public override strategyRatio;
-
+    address public ratioManager;
     address public voter;
 
     EnumerableSet.AddressSet _strategySet;
     EnumerableSet.AddressSet _rewardTokenSet;
 
-    function initialize() public initializer {
+    function initialize(address _ratioManager) public initializer {
         __Ownable_init_unchained();
 
+        ratioManager = _ratioManager;
         _rewardTokenSet.add(IOTX_REWARD_TOKEN);
         emit AddRewardToken(IOTX_REWARD_TOKEN);
     }
 
-    function addStrategy(address strategy, uint256 ratio) external override onlyOwner {
+    function addStrategy(address strategy) external override onlyOwner {
         require(strategy != address(0), "zero address");
         require(_strategySet.length() < MAX_STRATEGY, "exceed max strategy");
-        require(ratio > 10 && ratio < 5000, "invalid ratio");
+
+        IStrategy _strategy = IStrategy(strategy);
+        require(IRatioManager(ratioManager).isSupportedToken(_strategy.underlyingToken()));
         require(!_strategySet.contains(strategy), "strategy exist");
-        require(IStrategy(strategy).strategyManager() == address(this), "invalid strategy manager");
+        require(_strategy.strategyManager() == address(this), "invalid strategy manager");
 
         _strategySet.add(strategy);
-        strategyRatio[strategy] = ratio;
 
-        emit AddStrategy(strategy, ratio);
+        emit AddStrategy(strategy);
     }
 
     function removeStrategy(address strategy) external override onlyOwner {
         require(_strategySet.contains(strategy), "strategy not exist");
 
         _strategySet.remove(strategy);
-        strategyRatio[strategy] = 0;
 
         emit RemoveStrategy(strategy);
-    }
-
-    function changeStrategyRatio(address strategy, uint256 ratio) external override onlyOwner {
-        require(_strategySet.contains(strategy), "strategy not exist");
-        require(ratio > 10 && ratio < 5000, "invalid ratio");
-
-        strategyRatio[strategy] = ratio;
-
-        emit ChangeStrategyRatio(strategy, ratio);
     }
 
     function strategyCount() external view override returns (uint256) {
@@ -76,40 +67,35 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         address[] memory _strategies = _strategySet.values();
         uint256 result = 0;
         for (uint256 i = 0; i < _strategies.length; i++) {
-            address strategy = _strategies[i];
-            uint256 ratio = strategyRatio[strategy];
-
-            result += IStrategy(_strategies[i]).amount(staker) * ratio / RATIO_FACTOR;
+            IStrategy strategy = IStrategy(_strategies[i]);
+            result += IRatioManager(ratioManager).getTargetAmount(strategy.underlyingToken(), strategy.amount(staker));
         }
 
         return result;
     }
 
     function shares(address staker, address strategy) external view override returns (uint256) {
-        uint256 ratio = strategyRatio[strategy];
-        require(ratio > 0, "strategy not exist");
+        IStrategy _strategy = IStrategy(strategy);
 
-        return IStrategy(strategy).amount(staker) * ratio / RATIO_FACTOR;
+        return IRatioManager(ratioManager).getTargetAmount(_strategy.underlyingToken(), _strategy.amount(staker));
     }
 
     function totalShares() public view override returns (uint256) {
         address[] memory _strategies = _strategySet.values();
         uint256 result = 0;
         for (uint256 i = 0; i < _strategies.length; i++) {
-            address strategy = _strategies[i];
-            uint256 ratio = strategyRatio[strategy];
+            IStrategy strategy = IStrategy(_strategies[i]);
 
-            result += IStrategy(_strategies[i]).totalAmount() * ratio / RATIO_FACTOR;
+            result += IRatioManager(ratioManager).getTargetAmount(strategy.underlyingToken(), strategy.totalAmount());
         }
 
         return result;
     }
 
     function totalShares(address strategy) public view override returns (uint256) {
-        uint256 ratio = strategyRatio[strategy];
-        require(ratio > 0, "strategy not exist");
+        IStrategy _strategy = IStrategy(strategy);
 
-        return IStrategy(strategy).totalAmount() * ratio / RATIO_FACTOR;
+        return IRatioManager(ratioManager).getTargetAmount(_strategy.underlyingToken(), _strategy.totalAmount());
     }
 
     function addRewardToken(address token) external override onlyOwner {
@@ -122,11 +108,25 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         emit AddRewardToken(token);
     }
 
-    function setVoter(address _voter) external onlyOwner  {
+    function setVoter(address _voter) external onlyOwner {
         require(_voter != address(0), "zero address");
-        require(_voter != voter, "same address");
 
         voter = _voter;
+        emit SetVoter(_voter);
+    }
+
+    function changeRatioManager(address _ratioManager) external onlyOwner {
+        require(_ratioManager != address(0), "zero address");
+
+        address[] memory _strategies = _strategySet.values();
+        for (uint256 i = 0; i < _strategies.length; i++) {
+            require(
+                IRatioManager(_ratioManager).isSupportedToken(IStrategy(_strategies[i]).underlyingToken()),
+                "unsupport token"
+            );
+        }
+        ratioManager = _ratioManager;
+        emit ChangeRatioManager(_ratioManager);
     }
 
     function removeRewardToken(address token) external override onlyOwner {

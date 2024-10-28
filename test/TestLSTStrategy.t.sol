@@ -18,18 +18,18 @@ contract TestStrategy is Test {
 
     function setUp() external {
         lst = new MockLST("Test-LST", "LST");
-        lst.mint(address (this), 10000 ether);
+        lst.mint(address(this), 10000 ether);
         manager = new StrategyManager();
         manager.initialize();
         voter = new MockVoter(address(manager));
         manager.setVoter(address(voter));
         strategy = new LSTStrategy();
-        strategy.initialize(address (lst),address( manager));
-        manager.addStrategy(address (strategy), 100);
+        strategy.initialize(address(lst), address(manager));
+        manager.addStrategy(address(strategy));
     }
 
     function test_stake_unstake() external {
-        lst.approve(address (strategy), 10 ether);
+        lst.approve(address(strategy), 10 ether);
 
         //0. stake failed
         vm.expectRevert("zero amount");
@@ -47,8 +47,8 @@ contract TestStrategy is Test {
 
         //3. unstake 1 ether
         strategy.unstake(1 ether);
-        vm.assertEq(2 ether, voter.amount(address (this)));
-        console.log("this: ", address (this));
-        console.log("strategy: ", address (strategy));
+        vm.assertEq(2 ether, voter.amount(address(this)));
+        console.log("this: ", address(this));
+        console.log("strategy: ", address(strategy));
     }
 }

@@ -4,17 +4,18 @@ pragma solidity ^0.8.19;
 import "./IStrategy.sol";
 
 interface IStrategyManager {
-    event AddStrategy(address indexed strategy, uint256 ratio);
+    event AddStrategy(address indexed strategy);
     event RemoveStrategy(address indexed strategy);
-    event ChangeStrategyRatio(address indexed strategy, uint256 ratio);
+    event SetVoter(address indexed voter);
+    event ChangeRatioManager(address indexed ratioManager);
     event AddRewardToken(address indexed token);
     event RemoveRewardToken(address indexed token);
     event DistributeRewards(address indexed strategy, address indexed token, uint256 rewards);
 
     /**
-     * @notice add strategy with ratio
+     * @notice add strategy
      */
-    function addStrategy(address strategy, uint256 ratio) external;
+    function addStrategy(address strategy) external;
 
     /**
      * @notice remove strategy
@@ -22,9 +23,9 @@ interface IStrategyManager {
     function removeStrategy(address strategy) external;
 
     /**
-     * @notice change strategy ratio
+     * @notice change ratio manager
      */
-    function changeStrategyRatio(address strategy, uint256 ratio) external;
+    function changeRatioManager(address _ratioManager) external;
 
     /**
      * @notice strategy count
@@ -35,11 +36,6 @@ interface IStrategyManager {
      * @notice all strategies
      */
     function strategies() external view returns (address[] memory);
-
-    /**
-     * @notice strategy ratio
-     */
-    function strategyRatio(address strategy) external view returns (uint256);
 
     /**
      * @notice convenience function for fetching the total shares of `user`

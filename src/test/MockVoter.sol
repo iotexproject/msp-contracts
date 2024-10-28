@@ -7,9 +7,9 @@ import {StrategyManager} from "../core/StrategyManager.sol";
 
 contract MockVoter is IVoter {
     StrategyManager public manager;
-    mapping(address=>uint256) public amount;
+    mapping(address => uint256) public amount;
 
-    constructor (address _manager){
+    constructor(address _manager) {
         manager = StrategyManager(_manager);
     }
 

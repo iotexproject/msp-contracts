@@ -19,12 +19,10 @@ contract Deployer is Script {
         proxyAdmin = vm.envAddress("PROXY_ADMIN_ADDRESS");
         strategyManager = vm.envAddress("STRATEGY_MANAGER");
         lstToken = vm.envAddress("LST_TOKEN");
-        lstRatio = vm.envUint("LST_RATIO");
 
         console.log("PROXY_ADMIN_ADDRESS: '%s'", proxyAdmin);
         console.log("STRATEGY_MANAGER: '%s'", strategyManager);
         console.log("LST_TOKEN: '%s'", lstToken);
-        console.log("LST_RATIO: '%d'", lstRatio);
     }
 
     function run() external {
@@ -36,7 +34,7 @@ contract Deployer is Script {
         );
 
         IStrategyManager strategyManagerProxy = IStrategyManager(address(strategyManager));
-        strategyManagerProxy.addStrategy(address(strategy), lstRatio);
+        strategyManagerProxy.addStrategy(address(strategy));
 
         vm.stopBroadcast();
 
