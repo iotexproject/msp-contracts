@@ -13,6 +13,8 @@ contract LSTStrategy is ILSTStrategy, BaseStrategy {
 
     uint256 constant WEEK = 7 days;
 
+    uint256 public override cap;
+
     // @inheritdoc ILSTStrategy
     mapping(address => uint256) public override unstakeTime;
 
@@ -33,6 +35,9 @@ contract LSTStrategy is ILSTStrategy, BaseStrategy {
 
     function _stake(address _staker, uint256 _amount) internal {
         require(_amount > 0, "zero amount");
+        if (cap > 0) {
+            require(totalAmount + _amount <= cap, "exceed staking cap");
+        }
 
         IERC20(underlyingToken).safeTransferFrom(_staker, address(this), _amount);
 
@@ -79,5 +84,12 @@ contract LSTStrategy is ILSTStrategy, BaseStrategy {
 
     function withdrawTime(address staker) external view returns (uint256) {
         return unstakeTime[staker] + WEEK;
+    }
+
+    function setCap(uint256 _cap) external onlyOwner {
+        require(_cap > 0, "invalid cap");
+
+        cap = _cap;
+        emit SetCap(_cap);
     }
 }
