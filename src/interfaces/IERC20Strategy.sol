@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import "./IStrategy.sol";
 
-interface ILSTStrategy is IStrategy {
+interface IERC20Strategy is IStrategy {
     event Stake(address indexed staker, uint256 stakingAmount);
     event Unstake(address indexed staker, uint256 unstakeAmount);
     event Withdraw(address indexed staker, address recipient, uint256 amount);

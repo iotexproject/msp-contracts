@@ -5,20 +5,20 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../interfaces/IStrategyManager.sol";
-import "../interfaces/ILSTStrategy.sol";
+import "../interfaces/IERC20Strategy.sol";
 import "./BaseStrategy.sol";
 
-contract LSTStrategy is ILSTStrategy, BaseStrategy {
+contract ERC20Strategy is IERC20Strategy, BaseStrategy {
     using SafeERC20 for IERC20;
 
     uint256 constant WEEK = 7 days;
 
     uint256 public override cap;
 
-    // @inheritdoc ILSTStrategy
+    // @inheritdoc IERC20Strategy
     mapping(address => uint256) public override unstakeTime;
 
-    // @inheritdoc ILSTStrategy
+    // @inheritdoc IERC20Strategy
     mapping(address => uint256) public override unstakingAmount;
 
     function initialize(address lst, address manager) public initializer {

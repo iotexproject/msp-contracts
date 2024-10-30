@@ -38,8 +38,9 @@ contract Deployer is Script {
 
         // deploy StrategyManager
         StrategyManager strategyManagerImpl = new StrategyManager();
+        // TODO ratioManager
         TransparentUpgradeableProxy strategyManager = new TransparentUpgradeableProxy(
-            address(strategyManagerImpl), proxyAdmin, abi.encodeCall(StrategyManager.initialize, ())
+            address(strategyManagerImpl), proxyAdmin, abi.encodeCall(StrategyManager.initialize, (address(0)))
         );
 
         // deploy BucketStrategy

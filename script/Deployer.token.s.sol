@@ -7,7 +7,7 @@ import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.s
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import {IStrategyManager} from "src/interfaces/IStrategyManager.sol";
-import {LSTStrategy} from "src/strategies/LSTStrategy.sol";
+import {ERC20Strategy} from "src/strategies/ERC20Strategy.sol";
 
 contract Deployer is Script {
     address private proxyAdmin;
@@ -28,9 +28,9 @@ contract Deployer is Script {
     function run() external {
         vm.startBroadcast();
 
-        LSTStrategy strategyImpl = new LSTStrategy();
+        ERC20Strategy strategyImpl = new ERC20Strategy();
         TransparentUpgradeableProxy strategy = new TransparentUpgradeableProxy(
-            address(strategyImpl), proxyAdmin, abi.encodeCall(LSTStrategy.initialize, (lstToken, strategyManager))
+            address(strategyImpl), proxyAdmin, abi.encodeCall(ERC20Strategy.initialize, (lstToken, strategyManager))
         );
 
         IStrategyManager strategyManagerProxy = IStrategyManager(address(strategyManager));
@@ -38,6 +38,6 @@ contract Deployer is Script {
 
         vm.stopBroadcast();
 
-        console.log("Deployed LSTStrategy for %s LST: '%s'", lstToken, address(strategy));
+        console.log("Deployed ERC20Strategy for %s Token: '%s'", lstToken, address(strategy));
     }
 }
