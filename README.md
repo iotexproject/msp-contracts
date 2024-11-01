@@ -1,5 +1,9 @@
 ## MSP Contracts
 
+Modular Security Pool for DePIN projects.
+
+The Modular Security Pool (MSP) is a module that acts as a pool gathering staking security from various established Layer 1 blockchains and distributing that security to new networks, including DePINs and DePIN Infrastructure Providers (DIMs). This allows new networks to inherit the security of the underlying Layer 1 blockchains without having to build their own security infrastructure from scratch. Learn more: https://docs.iotex.io/depin-infra-modules-dim/msp-modular-security-pool
+
 ### Deployment
 
 #### Testnet
