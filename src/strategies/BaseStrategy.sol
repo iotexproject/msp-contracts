@@ -54,6 +54,7 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
         if (_token == IOTX_REWARD_TOKEN) {
             require(_amount == msg.value, "rewards dismatch");
         } else {
+            require(msg.value == 0, "invalid value");
             IERC20(_token).safeTransferFrom(msg.sender, address(this), _amount);
         }
 
@@ -86,7 +87,7 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
 
     function pendingReward(address _token, address _staker, uint256 _amount) internal view returns (uint256) {
         uint256 _accTokenPerAmount = accTokenPerAmount[_token];
-        if (_amount == 0 && _accTokenPerAmount == 0) {
+        if (_amount == 0 || _accTokenPerAmount == 0) {
             return 0;
         }
         return _amount * _accTokenPerAmount / PRECISION_FACTOR - rewardDebt[_token][_staker];

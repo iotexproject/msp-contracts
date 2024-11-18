@@ -4,10 +4,7 @@ pragma solidity ^0.8.19;
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "../interfaces/IRatioManager.sol";
-
-interface IOracle {
-    function latestAnswer() external view returns (uint256);
-}
+import "../interfaces/IOracle.sol";
 
 contract USDBasedOracleRatioManager is IRatioManager, OwnableUpgradeable {
     event AddOracle(address indexed token, address indexed oracle);

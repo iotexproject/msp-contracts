@@ -20,11 +20,15 @@ contract BucketRewardPool is IBucketRewardPool, OwnableUpgradeable {
     }
 
     function setCommitter(address newCommitter) external onlyOwner {
+        require(newCommitter != address(0), "zero address");
+
         committer = newCommitter;
         emit SetCommitter(newCommitter);
     }
 
     function setApprover(address newApprover) external onlyOwner {
+        require(newApprover != address(0), "zero address");
+
         approver = newApprover;
         emit SetApprover(newApprover);
     }
@@ -40,6 +44,7 @@ contract BucketRewardPool is IBucketRewardPool, OwnableUpgradeable {
     function commitRoot(uint256 batch, bytes32 root) external override {
         require(committer == msg.sender, "not committer");
         require(!approvedBatch[batch], "already approved");
+        require(root != bytes32(0), "invalid root");
 
         batchRoot[batch] = root;
         emit CommitRoot(msg.sender, batch, root);

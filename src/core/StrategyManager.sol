@@ -155,10 +155,12 @@ contract StrategyManager is IStrategyManager, OwnableUpgradeable {
         if (token == IOTX_REWARD_TOKEN) {
             require(amount == msg.value, "rewards dismatch");
         } else {
+            require(msg.value == 0, "invalid value");
             IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         }
 
         uint256 _totalShares = totalShares();
+        require(_totalShares > 0, "zero total shares");
         uint256 _perShare = amount * PRECISION_FACTOR / _totalShares;
 
         address[] memory _strategies = _strategySet.values();

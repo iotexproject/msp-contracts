@@ -37,8 +37,6 @@ interface IBucketStrategy is IStrategy {
 
     function stake(uint256 bucketId) external;
 
-    function stake(address staker, uint256 bucketId) external;
-
     function deposit(uint256 bucketId) external payable;
 
     function poke(uint256 bucketId) external;

@@ -19,8 +19,6 @@ interface IERC20Strategy is IStrategy {
 
     function stake(uint256 _amount) external;
 
-    function stake(address _staker, uint256 _amount) external;
-
     function unstake(uint256 _amount) external;
 
     function withdraw(address recipient) external;

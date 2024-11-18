@@ -42,11 +42,6 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
         _stake(msg.sender, bucketId);
     }
 
-    /// @inheritdoc IBucketStrategy
-    function stake(address staker, uint256 bucketId) external override nonReentrant {
-        _stake(staker, bucketId);
-    }
-
     function _stake(address staker, uint256 bucketId) internal {
         IBucket bucketContract = IBucket(underlyingToken);
         require(bucketContract.ownerOf(bucketId) == staker, "not owner");

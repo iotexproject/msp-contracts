@@ -29,10 +29,6 @@ contract ERC20Strategy is IERC20Strategy, BaseStrategy {
         _stake(msg.sender, _amount);
     }
 
-    function stake(address _staker, uint256 _amount) external override nonReentrant {
-        _stake(_staker, _amount);
-    }
-
     function _stake(address _staker, uint256 _amount) internal {
         require(_amount > 0, "zero amount");
         if (cap > 0) {
