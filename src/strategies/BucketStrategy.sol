@@ -173,7 +173,10 @@ contract BucketStrategy is IBucketStrategy, BaseStrategy, ERC721Holder {
 
     /// @inheritdoc IBucketStrategy
     function calculateBucketRestakeAmount(uint256 _duration, uint256 _amount) public pure override returns (uint256) {
-        // TODO calculate bonus by duration
-        return _amount;
+        if (_duration > 91 days) {
+            _duration = 91 days;
+        }
+
+        return _amount + _amount * 10 * _duration / 9100 days;
     }
 }
