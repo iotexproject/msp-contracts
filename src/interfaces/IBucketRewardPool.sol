@@ -19,12 +19,19 @@ interface IBucketRewardPool {
     /**
      * @notice claim rewards and deposit to bucket
      */
-    function claim(uint256 batch, uint256 bucketId, bytes32[] calldata proof) external;
+    function claim(uint256 batch, address owner, uint256 bucketId, uint256 value, bytes32[] calldata proof) external;
 
     /**
      * @notice claim rewards to receiver account
      */
-    function claim(uint256 batch, uint256 bucketId, address receiver, bytes32[] calldata proof) external;
+    function claim(
+        uint256 batch,
+        address owner,
+        uint256 bucketId,
+        uint256 value,
+        address receiver,
+        bytes32[] calldata proof
+    ) external;
 
     /**
      * @notice commit buckets rewards root
