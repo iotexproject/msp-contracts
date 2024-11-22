@@ -31,9 +31,6 @@ abstract contract BaseStrategy is IStrategy, OwnableUpgradeable, ReentrancyGuard
     /// @inheritdoc IStrategy
     address public override strategyManager;
 
-    // token address -> reward
-    mapping(address => uint256) public remainingReward;
-
     // token address -> per amount
     mapping(address => uint256) public accTokenPerAmount;
 
