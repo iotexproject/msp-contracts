@@ -46,6 +46,7 @@ contract BucketRewardPool is IBucketRewardPool, OwnableUpgradeable {
         require(claimed[batch][bucketId] == 0, "claimed");
         bytes32 node = keccak256(abi.encodePacked(batch, owner, bucketId, value));
         require(MerkleProof.verify(proof, batchRoot[batch], node), "invalid proof");
+        claimed[batch][bucketId] += 1;
         payable(owner).sendValue(value);
     }
 
@@ -62,6 +63,7 @@ contract BucketRewardPool is IBucketRewardPool, OwnableUpgradeable {
         require(claimed[batch][bucketId] == 0, "claimed");
         bytes32 node = keccak256(abi.encodePacked(batch, owner, bucketId, value));
         require(MerkleProof.verify(proof, batchRoot[batch], node), "invalid proof");
+        claimed[batch][bucketId] += 1;
         payable(receiver).sendValue(value);
     }
 
